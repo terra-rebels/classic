@@ -45,6 +45,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -146,6 +147,8 @@ import (
 
 	// unnamed import of statik for swagger UI support
 	_ "github.com/terra-money/core/client/docs/statik"
+
+	v2 "github.com/terra-money/core/app/upgrades/v2"
 )
 
 const appName = "TerraApp"
@@ -397,6 +400,7 @@ func NewTerraApp(
 		scopedICAHostKeeper,
 		bApp.MsgServiceRouter(),
 	)
+	ICAModule := ica.NewAppModule(nil, &app.ICAHostKeeper)
 	icaHostIBCModule := icahost.NewIBCModule(app.ICAHostKeeper)
 
 	// Create static IBC router, add transfer route, then set and seal it
@@ -472,6 +476,8 @@ func NewTerraApp(
 
 	/****  Module Options ****/
 	skipGenesisInvariants := cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
+
+	app.setupUpgradeStoreLoaders()
 
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
@@ -592,6 +598,7 @@ func NewTerraApp(
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
 	app.mm.RegisterServices(app.configurator)
+	app.setupUpgradeHandlers(ICAModule)
 
 	// create the simulation manager and define the order of the modules for deterministic simulations
 	//
@@ -864,4 +871,26 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(wasmtypes.ModuleName)
 
 	return paramsKeeper
+}
+
+func (app *TerraApp) setupUpgradeStoreLoaders() {
+	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
+	if err != nil {
+		panic(fmt.Sprintf("failed to read upgrade info from disk %s", err))
+	}
+
+	if upgradeInfo.Name == v2.UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		storeUpgrades := storetypes.StoreUpgrades{
+			Added: []string{icahosttypes.StoreKey},
+		}
+
+		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+	}
+}
+
+func (app *TerraApp) setupUpgradeHandlers(ICAModule ica.AppModule) {
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v2.UpgradeName,
+		v2.CreateV2UpgradeHandler(app.mm, app.configurator, ICAModule),
+	)
 }
