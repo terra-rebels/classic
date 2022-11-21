@@ -1,7 +1,7 @@
 #!/bin/bash
 
 OLD_VERSION=1.0.4
-UPGRADE_HEIGHT=30
+UPGRADE_HEIGHT=20
 HOME=mytestnet
 ROOT=$(pwd)
 
@@ -12,13 +12,14 @@ then
     wget -c "https://github.com/terra-rebels/classic/archive/refs/tags/v${OLD_VERSION}.zip" -O build/v${OLD_VERSION}.zip
     unzip build/v${OLD_VERSION}.zip -d build
     cd ./build/classic-${OLD_VERSION}
-    GOBIN="$ROOT/build/old" go install -mod=readonly ./... 2 > dev/null
+    GOBIN="$ROOT/build/old" go install -mod=readonly ./... 2> /dev/null
+    cd ../..
 fi
 
 # install new binary
 if ! command -v build/new/terrad &> /dev/null
 then
-    GOBIN="$ROOT/build/new" go install -mod=readonly ./... 2 > dev/null
+    GOBIN="$ROOT/build/new" go install -mod=readonly ./... 2> /dev/null
 fi
 
 # start old node

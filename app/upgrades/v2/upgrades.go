@@ -19,11 +19,10 @@ import (
 func CreateV2UpgradeHandler(
 	mm *module.Manager,
 	cfg module.Configurator,
-	icaModule icamodule.AppModule,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		// set the ICS27 consensus version so InitGenesis is not run
-		fromVM[icatypes.ModuleName] = icaModule.ConsensusVersion()
+		fromVM[icatypes.ModuleName] = mm.Modules[icatypes.ModuleName].ConsensusVersion()
 
 		// create ICS27 Controller submodule params
 		controllerParams := icacontrollertypes.Params{
@@ -54,6 +53,10 @@ func CreateV2UpgradeHandler(
 		}
 
 		// initialize ICS27 module
+		icaModule, correctTypecast := mm.Modules[icatypes.ModuleName].(icamodule.AppModule)
+		if !correctTypecast {
+			panic("mm.Modules[icatypes.ModuleName] is not of type icamodule.AppModule")
+		}
 		icaModule.InitModule(ctx, controllerParams, hostParams)
 
 		return mm.RunMigrations(ctx, cfg, fromVM)
