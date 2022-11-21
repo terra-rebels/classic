@@ -8,12 +8,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/terra-money/core/x/wasm/types"
+
 )
 
 func (k Keeper) getCosmWasmAPI(ctx sdk.Context) cosmwasm.GoAPI {
 	return cosmwasm.GoAPI{
 		HumanAddress: func(canon []byte) (humanAddr string, usedGas uint64, err error) {
-			humanizeCost := types.HumanizeWasmGasCost * types.GasMultiplier
+			humanizeCost := types.HumanizeWasmGasCost
 			err = sdk.VerifyAddressFormat(canon)
 			if err != nil {
 				return "", humanizeCost, nil
@@ -22,7 +23,7 @@ func (k Keeper) getCosmWasmAPI(ctx sdk.Context) cosmwasm.GoAPI {
 			return sdk.AccAddress(canon).String(), humanizeCost, nil
 		},
 		CanonicalAddress: func(human string) (canonicalAddr []byte, usedGas uint64, err error) {
-			canonicalizeCost := types.CanonicalizeWasmGasCost * types.GasMultiplier
+			canonicalizeCost := types.CanonicalizeWasmGasCost
 			addr, err := sdk.AccAddressFromBech32(human)
 			if err != nil {
 				return nil, canonicalizeCost, err
