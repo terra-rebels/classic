@@ -1,45 +1,44 @@
 #!/bin/bash
 
-OLD_BRANCH=main
-NEW_BRANCH=ibc-3.4.0-bump
+OLD_VERSION=1.0.4
 UPGRADE_HEIGHT=30
 HOME=mytestnet
+ROOT=$(pwd)
 
 # install old binary
 if ! command -v build/old/terrad &> /dev/null
 then
-    git checkout $OLD_BRANCH
-
-    go build -mod=readonly -o build/old/terrad ./cmd/terrad
+    mkdir -p build/old
+    wget -c "https://github.com/terra-rebels/classic/archive/refs/tags/v${OLD_VERSION}.zip" -O build/v${OLD_VERSION}.zip
+    unzip build/v${OLD_VERSION}.zip -d build
+    cd ./build/classic-${OLD_VERSION}
+    GOBIN="$ROOT/build/old" go install -mod=readonly ./... 2 > dev/null
 fi
-
 
 # install new binary
 if ! command -v build/new/terrad &> /dev/null
 then
-    git checkout $NEW_BRANCH
-
-    go build -mod=readonly -o build/new/terrad ./cmd/terrad
+    GOBIN="$ROOT/build/new" go install -mod=readonly ./... 2 > dev/null
 fi
 
 # start old node
-screen -S node1 -d -m bash scripts/start-node.sh build/old/terrad
+screen -S node1 -d -Lm bash scripts/start-node.sh build/old/terrad
 
-sleep 15
+sleep 20
 
-./build/old/terrad tx gov submit-proposal software-upgrade v2 --upgrade-height $UPGRADE_HEIGHT --upgrade-info "temp" --title "upgrade" --description "upgrade"  --from test1 --keyring-backend test --chain-id test --home mytestnet -y
-
-sleep 3
-
-./build/old/terrad tx gov deposit 1 20000000uluna --from test1 --keyring-backend test --chain-id test --home mytestnet -y
+./build/old/terrad tx gov submit-proposal software-upgrade v2 --upgrade-height $UPGRADE_HEIGHT --upgrade-info "temp" --title "upgrade" --description "upgrade"  --from test1 --keyring-backend test --chain-id test --home $HOME -y
 
 sleep 3
 
-./build/old/terrad tx gov vote 1 yes --from test --keyring-backend test --chain-id test --home mytestnet -y
+./build/old/terrad tx gov deposit 1 20000000uluna --from test1 --keyring-backend test --chain-id test --home $HOME -y
 
 sleep 3
 
-./build/old/terrad tx gov vote 1 yes --from test1 --keyring-backend test --chain-id test --home mytestnet -y
+./build/old/terrad tx gov vote 1 yes --from test --keyring-backend test --chain-id test --home $HOME -y
+
+sleep 3
+
+./build/old/terrad tx gov vote 1 yes --from test1 --keyring-backend test --chain-id test --home $HOME -y
 
 sleep 3
 
