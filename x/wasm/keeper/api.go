@@ -8,7 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/terra-money/core/x/wasm/types"
-
 )
 
 func (k Keeper) getCosmWasmAPI(ctx sdk.Context) cosmwasm.GoAPI {
