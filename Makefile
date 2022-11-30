@@ -169,6 +169,34 @@ clean:
 .PHONY: distclean clean
 
 ###############################################################################
+###                           Genesis tooling                               ###
+###############################################################################
+GENESIS_REMOTE_PATH ?= https://www.dropbox.com/s/3zevo74iho80llc/col5_nowasm.json?dl=0
+GENESIS_LOCAL_PATH ?= $(PWD)/genesis.json
+GENESIS_COPY_PATH ?= $(PWD)/genesis_copy.json
+
+genesis-tools:
+	sudo apt install jq curl
+
+genesis-fetch:
+	curl $(GENESIS_REMOTE_PATH) -L -H "Accept: application/json" -o $(GENESIS_LOCAL_PATH)
+
+genesis-list-validators:
+	jq '.validators | .[]' $(GENESIS_LOCAL_PATH)
+
+genesis-add-validator:
+	jq '.validators += [$(GENESIS_VALIDATOR_JSON)]' $(GENESIS_LOCAL_PATH) > $(GENESIS_COPY_PATH)
+	cp -fr $(GENESIS_COPY_PATH) $(GENESIS_LOCAL_PATH)
+	rm $(GENESIS_COPY_PATH) 
+
+genesis-remove-validator:
+	jq 'del(.validators[] | select(.address == "$(GENESIS_VALIDATOR_ADDRESS)"))' $(GENESIS_LOCAL_PATH) > $(GENESIS_COPY_PATH)
+	cp -fr $(GENESIS_COPY_PATH) $(GENESIS_LOCAL_PATH)
+	rm $(GENESIS_COPY_PATH)
+
+.PHONY: genesis-tools genesis-fetch genesis-add-validator genesis-remove-validator
+
+###############################################################################
 ###                           Tests & Simulation                            ###
 ###############################################################################
 

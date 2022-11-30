@@ -51,3 +51,4 @@ dependency-graph.png
 *.aux
 *.out
 *.synctex.gz
+genesis.json
