@@ -4,55 +4,61 @@ OLD_VERSION=1.0.4
 UPGRADE_HEIGHT=20
 HOME=mytestnet
 ROOT=$(pwd)
+DENOM=uluna
+SOFTWARE_UPGRADE_NAME=v2
+
+# underscore so that go tool will not take gocache into account
+mkdir -p _build/gocache
+export GOMODCACHE=$ROOT/_build/gocache
 
 # install old binary
-if ! command -v build/old/terrad &> /dev/null
+if ! command -v _build/old/terrad &> /dev/null
 then
-    mkdir -p build/old
-    wget -c "https://github.com/terra-rebels/classic/archive/refs/tags/v${OLD_VERSION}.zip" -O build/v${OLD_VERSION}.zip
-    unzip build/v${OLD_VERSION}.zip -d build
-    cd ./build/classic-${OLD_VERSION}
-    GOBIN="$ROOT/build/old" go install -mod=readonly ./... 2> /dev/null
+    mkdir -p _build/old
+    wget -c "https://github.com/terra-rebels/classic/archive/refs/tags/v${OLD_VERSION}.zip" -O _build/v${OLD_VERSION}.zip
+    unzip _build/v${OLD_VERSION}.zip -d _build
+    cd ./_build/classic-${OLD_VERSION}
+    GOBIN="$ROOT/_build/old" go install -mod=readonly ./...
     cd ../..
 fi
 
 # install new binary
-if ! command -v build/new/terrad &> /dev/null
+if ! command -v _build/new/terrad &> /dev/null
 then
-    GOBIN="$ROOT/build/new" go install -mod=readonly ./... 2> /dev/null
+    GOBIN="$ROOT/_build/new" go install -mod=readonly ./...
 fi
 
 # start old node
-screen -S node1 -d -Lm bash scripts/start-node.sh build/old/terrad
+screen -dmS node1 bash scripts/run-upgrade-node.sh _build/old/terrad $DENOM
 
 sleep 20
 
-./build/old/terrad tx gov submit-proposal software-upgrade v2 --upgrade-height $UPGRADE_HEIGHT --upgrade-info "temp" --title "upgrade" --description "upgrade"  --from test1 --keyring-backend test --chain-id test --home $HOME -y
+./_build/old/terrad tx gov submit-proposal software-upgrade "$SOFTWARE_UPGRADE_NAME" --upgrade-height $UPGRADE_HEIGHT --upgrade-info "temp" --title "upgrade" --description "upgrade"  --from test1 --keyring-backend test --chain-id test --home $HOME -y
 
 sleep 3
 
-./build/old/terrad tx gov deposit 1 20000000uluna --from test1 --keyring-backend test --chain-id test --home $HOME -y
+./_build/old/terrad tx gov deposit 1 "20000000${DENOM}" --from test1 --keyring-backend test --chain-id test --home $HOME -y
 
 sleep 3
 
-./build/old/terrad tx gov vote 1 yes --from test --keyring-backend test --chain-id test --home $HOME -y
+./_build/old/terrad tx gov vote 1 yes --from test --keyring-backend test --chain-id test --home $HOME -y
 
 sleep 3
 
-./build/old/terrad tx gov vote 1 yes --from test1 --keyring-backend test --chain-id test --home $HOME -y
+./_build/old/terrad tx gov vote 1 yes --from test1 --keyring-backend test --chain-id test --home $HOME -y
 
 sleep 3
 
 # determine block_height to halt
 while true; do 
-    BLOCK_HEIGHT=$(./build/new/terrad status | jq '.SyncInfo.latest_block_height' -r)
+    BLOCK_HEIGHT=$(./_build/old/terrad status | jq '.SyncInfo.latest_block_height' -r)
     if [ $BLOCK_HEIGHT = "$UPGRADE_HEIGHT" ]; then
         # assuming running only 1 terrad
         echo "BLOCK HEIGHT = $UPGRADE_HEIGHT REACHED, KILLING OLD ONE"
         pkill terrad
         break
     else
-        ./build/old/terrad q gov proposal 1 --output=json | jq ".status"
+        ./_build/old/terrad q gov proposal 1 --output=json | jq ".status"
         echo "BLOCK_HEIGHT = $BLOCK_HEIGHT"
         sleep 10
     fi
@@ -60,4 +66,4 @@ done
 
 sleep 3
 
-./build/new/terrad start --home $HOME
+./_build/new/terrad start --log_level debug --home $HOME
