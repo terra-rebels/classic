@@ -25,7 +25,7 @@ func (suite *AnteTestSuite) TestEnsureBurnTaxModule() {
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 
 	// msg and signatures
-	sendAmount := int64(1000000)
+	sendAmount := int64(1_000_000)
 	sendCoins := sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, sendAmount))
 	msg := banktypes.NewMsgSend(addr1, addr1, sendCoins)
 
@@ -50,7 +50,8 @@ func (suite *AnteTestSuite) TestEnsureBurnTaxModule() {
 	suite.Require().NoError(err, "Decorator should not have errored when block height is 1")
 
 	// Set the blockheight past the tax height block
-	suite.ctx = suite.ctx.WithBlockHeight(10000000)
+	suite.ctx = suite.ctx.WithBlockHeight(10_000_000)
+
 	// antehandler errors with insufficient fees due to tax
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().Error(err, "Decorator should errored on low fee for local gasPrice + tax")
@@ -86,4 +87,47 @@ func (suite *AnteTestSuite) TestEnsureBurnTaxModule() {
 
 	// Total supply should have decreased by the tax amount
 	suite.Require().Equal(taxes, totalSupply.Sub(supplyAfterBurn))
+}
+
+func (suite *AnteTestSuite) TestEnsureIBCUntaxed() {
+	suite.SetupTest(true) // setup
+	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
+
+	mfd := ante.NewBurnTaxFeeDecorator(suite.app.TreasuryKeeper, suite.app.BankKeeper)
+	antehandler := sdk.ChainAnteDecorators(mfd)
+
+	// keys and addresses
+	priv1, _, addr1 := testdata.KeyTestPubAddr()
+
+	// msg and signatures
+	sendAmount := int64(1_000_000)
+	sendCoins := sdk.NewCoins(sdk.NewInt64Coin(core.OsmoIbcDenom, sendAmount))
+	msg := banktypes.NewMsgSend(addr1, addr1, sendCoins)
+
+	feeAmount := testdata.NewTestFeeAmount()
+	gasLimit := testdata.NewTestGasLimit()
+	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
+	suite.txBuilder.SetFeeAmount(feeAmount)
+	suite.txBuilder.SetGasLimit(gasLimit)
+
+	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
+	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	suite.Require().NoError(err)
+
+	// set zero gas prices
+	suite.ctx = suite.ctx.WithMinGasPrices(sdk.NewDecCoins())
+
+	// Set IsCheckTx to true
+	suite.ctx = suite.ctx.WithIsCheckTx(true)
+
+	// IBC must pass without burn before the specified tax block height
+	_, err = antehandler(suite.ctx, tx, false)
+	suite.Require().NoError(err, "Decorator should not have errored on IBC denoms when block height is 1")
+
+	// Set the blockheight past the tax height block
+	suite.ctx = suite.ctx.WithBlockHeight(10_000_000)
+
+	// IBC must pass without burn after the specified tax block height
+	_, err = antehandler(suite.ctx, tx, false)
+	suite.Require().NoError(err, "Decorator should not have errored on IBC denoms when block height is 10,000,000")
 }

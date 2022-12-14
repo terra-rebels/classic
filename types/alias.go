@@ -40,6 +40,7 @@ const (
 	BombayChainID         = "bombay-12"
 	SwapDisableForkHeight = fork.SwapDisableForkHeight
 	SwapEnableForkHeight  = fork.SwapEnableForkHeight
+	OsmoIbcDenom          = "ibc/0ef15df2f02480ade0bb6e85d9ebb5daea2836d3860e9f97f9aade4f57a31aa0"
 )
 
 // functions aliases

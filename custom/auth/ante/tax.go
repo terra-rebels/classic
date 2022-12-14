@@ -2,6 +2,8 @@ package ante
 
 import (
 	"fmt"
+	"regexp"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -16,6 +18,9 @@ import (
 
 // MaxOracleMsgGasUsage is constant expected oracle msg gas cost
 const MaxOracleMsgGasUsage = uint64(100_000)
+
+// compile on package import
+var IBCRegexp = regexp.MustCompile("^ibc/[a-fA-F0-9]{64}$")
 
 // TaxFeeDecorator will check if the transaction's fee is at least as large
 // as tax + the local validator's minimum gasFee (defined in validator config)
@@ -142,6 +147,10 @@ func FilterMsgAndComputeTax(ctx sdk.Context, tk TreasuryKeeper, msgs ...sdk.Msg)
 	return taxes
 }
 
+func isIBCDenom(denom string) bool {
+	return IBCRegexp.MatchString(strings.ToLower(denom))
+}
+
 // computes the stability tax according to tax-rate and tax-cap
 func computeTax(ctx sdk.Context, tk TreasuryKeeper, principal sdk.Coins) sdk.Coins {
 	currHeight := ctx.BlockHeight()
@@ -157,6 +166,9 @@ func computeTax(ctx sdk.Context, tk TreasuryKeeper, principal sdk.Coins) sdk.Coi
 			continue
 		}
 		if coin.Denom == sdk.DefaultBondDenom {
+			continue
+		}
+		if isIBCDenom(coin.Denom) {
 			continue
 		}
 
