@@ -1,9 +1,9 @@
-ARG base_image=terraclassic.terrad-binary
+ARG base_image=terrarebels/terraclassic.terrad-binary
 ARG version=latest
 
 FROM ${base_image}:${version}
 
-ARG chainid=rebel-2
+ARG chainid=columbus-5
 ARG enable_lcd=true
 ARG enable_unsafe_cors=false
 ARG cors_allowed_origins=[]
@@ -40,8 +40,8 @@ RUN terrad init --chain-id $chainid moniker
 RUN mv ~/.terra/config/config.toml ~/config.toml
 RUN mv ~/.terra/config/app.toml ~/app.toml
 
-RUN if [ "$chainid" = "columbus-5" ] ; then wget -O ~/.terra/config/genesis.json https://columbus-genesis.s3.ap-northeast-1.amazonaws.com/columbus-5-genesis.json; fi; \
-    if [ "$chainid" = "columbus-5" ] ; then wget -O ~/.terra/config/addrbook.json https://networks.mcontrol.ml/columbus/addrbook.json; fi; \
+RUN if [ "$chainid" = "columbus-5" ] ; then wget -O ~/.terra/config/genesis.json https://genesis.terrarebels.net/mainnet/columbus-5/columbus-5-genesis.json; fi; \
+    if [ "$chainid" = "columbus-5" ] ; then wget -O ~/.terra/config/addrbook.json https://genesis.terrarebels.net/mainnet/columbus-5/addrbook.json; fi; \
     if [ "$chainid" = "rebel-1" ]    ; then wget -O ~/.terra/config/genesis.json https://raw.githubusercontent.com/terra-rebels/classic-testnet/master/rebel-1/genesis.json; fi; \
     if [ "$chainid" = "rebel-1" ]    ; then wget -O ~/.terra/config/addrbook.json https://raw.githubusercontent.com/terra-rebels/classic-testnet/master/rebel-1/addrbook.json; fi; \
     if [ "$chainid" = "rebel-2" ]    ; then wget -O ~/.terra/config/genesis.json https://raw.githubusercontent.com/terra-rebels/classic-testnet/master/rebel-2/genesis.json; fi; \
