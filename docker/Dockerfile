@@ -5,6 +5,7 @@ FROM ${base_image}:${version}
 
 ARG chainid=columbus-5
 ARG enable_lcd=true
+ARG enable_pruning=true
 ARG enable_unsafe_cors=false
 ARG cors_allowed_origins=[]
 ARG cors_allowed_methods=["HEAD", "GET", "POST"]
@@ -20,6 +21,7 @@ ARG validator_min_self_delegation=1
 
 ENV CHAINID ${chainid}
 ENV ENABLE_LCD ${enable_lcd}
+ENV ENABLE_PRUNING ${enable_pruning}
 ENV ENABLE_UNSAFE_CORS ${enable_unsafe_cors}
 ENV CORS_ALLOWED_ORIGINS ${cors_allowed_origins}
 ENV CORS_ALLOWED_METHODS ${cors_allowed_methods}
