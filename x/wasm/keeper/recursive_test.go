@@ -96,15 +96,6 @@ func initRecurseContract(t *testing.T) (contract sdk.AccAddress, creator sdk.Acc
 }
 
 func TestGasCostOnQuery(t *testing.T) {
-	//	GasNoWork := types.InstantiateContractCosts(0) + 3_509
-	// Note: about 100 SDK gas (10k wasmVM gas) for each round of sha256
-	//	GasWork50 := GasNoWork + 5_662 // this is a little shy of 50k gas - to keep an eye on the limit
-	// All gas calculations have been made to match the exact gas cost as computed by sdk v0.45.9
-
-	const (
-		GasReturnUnhashed uint64 = 198
-		GasReturnHashed   uint64 = 171
-	)
 
 	cases := map[string]struct {
 		gasLimit    uint64
@@ -114,21 +105,21 @@ func TestGasCostOnQuery(t *testing.T) {
 		"no recursion, no work": {
 			gasLimit:    400_000,
 			msg:         Recurse{},
-			expectedGas: 43_602,
+			expectedGas: 0xa8ea,
 		},
 		"no recursion, some work": {
 			gasLimit: 400_000,
 			msg: Recurse{
 				Work: 50, // 50 rounds of sha256 inside the contract
 			},
-			expectedGas: 49_264,
+			expectedGas: 0xaa35,
 		},
 		"recursion 1, no work": {
 			gasLimit: 400_000,
 			msg: Recurse{
 				Depth: 1,
 			},
-			expectedGas: 87_402,
+			expectedGas: 0x151b2,
 		},
 		"recursion 1, some work": {
 			gasLimit: 400_000,
@@ -136,7 +127,7 @@ func TestGasCostOnQuery(t *testing.T) {
 				Depth: 1,
 				Work:  50,
 			},
-			expectedGas: 98_700,
+			expectedGas: 0x15446,
 		},
 		"recursion 4, some work": {
 			gasLimit: 400_000,
@@ -145,7 +136,7 @@ func TestGasCostOnQuery(t *testing.T) {
 				Work:  50,
 			},
 			// NOTE: +6 for rounding issues
-			expectedGas: 247_005,
+			expectedGas: 0x35279,
 		},
 	}
 
@@ -286,7 +277,7 @@ func TestLimitRecursiveQueryGas(t *testing.T) {
 				Work:  2000,
 			},
 			expectQueriesFromContract: 0,
-			expectedGas:               272_533,
+			expectedGas:               0xe0c3,
 		},
 		"recursion 5, lots of work": {
 			gasLimit: 4_000_000,
@@ -296,14 +287,14 @@ func TestLimitRecursiveQueryGas(t *testing.T) {
 			},
 			expectQueriesFromContract: 5,
 			// NOTE: +2 for rounding issues
-			expectedGas: 1_636_079,
+			expectedGas: 0x543de,
 		},
 		// this is where we expect an error...
 		// it has enough gas to run 4 times and die on the 5th (4th time dispatching to sub-contract)
 		// however, if we don't charge the cpu gas before sub-dispatching, we can recurse over 20 times
 		// TODO: figure out how to asset how deep it went
 		"deep recursion, should die on 5th level": {
-			gasLimit: 1_200_000,
+			gasLimit: 250_000,
 			msg: Recurse{
 				Depth: 50,
 				Work:  2000,

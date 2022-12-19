@@ -12,7 +12,7 @@ import (
 )
 
 // DefaultFeatures - Cosmwasm feature
-const DefaultFeatures = "stargate,staking,terra"
+const DefaultFeatures = "iterator, stargate,staking,terra"
 
 // ParseEvents converts wasm EventAttributes and Events into an sdk.Events
 func ParseEvents(

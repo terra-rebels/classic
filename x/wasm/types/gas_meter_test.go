@@ -13,11 +13,11 @@ import (
 
 func TestOverflow_ToWasmVM(t *testing.T) {
 	require.Panics(t,
-		func() { ToWasmVMGas(uint64(0x7f_ff_ff_ff_ff_ff_ff_ff)) },
+		func() { ToWasmVMGas(uint64(0x7f_ff_ff_ff_ff)) },
 	)
 
 	require.NotPanics(t, func() {
-		ToWasmVMGas(uint64(0x7f_ff_ff_ff_ff_ff_ff))
+		ToWasmVMGas(uint64(0x7_ff_ff_ff_ff))
 	})
 }
 
@@ -62,7 +62,7 @@ func TestReplyCosts(t *testing.T) {
 
 	reply := wasmvmtypes.Reply{
 		ID: 10,
-		Result: wasmvmtypes.SubcallResult{
+		Result: wasmvmtypes.SubMsgResult{
 			Ok: &wasmvmtypes.SubcallResponse{
 				Events: events,
 				Data:   make([]byte, dataLength),
