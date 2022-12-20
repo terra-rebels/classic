@@ -1,9 +1,9 @@
 package types
 
 import (
-	connectiontypes "github.com/cosmos/ibc-go/modules/core/03-connection/types"
-	channeltypes "github.com/cosmos/ibc-go/modules/core/04-channel/types"
-	ibcexported "github.com/cosmos/ibc-go/modules/core/exported"
+	connectiontypes "github.com/cosmos/ibc-go/v3/modules/core/03-connection/types"
+	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
+	ibcexported "github.com/cosmos/ibc-go/v3/modules/core/exported"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"

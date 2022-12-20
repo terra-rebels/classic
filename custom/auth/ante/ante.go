@@ -1,8 +1,8 @@
 package ante
 
 import (
-	channelkeeper "github.com/cosmos/ibc-go/modules/core/04-channel/keeper"
-	ibcante "github.com/cosmos/ibc-go/modules/core/ante"
+	ibcante "github.com/cosmos/ibc-go/v3/modules/core/ante"
+	channelkeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -67,6 +67,6 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		cosmosante.NewSigGasConsumeDecorator(options.AccountKeeper, sigGasConsumer),
 		NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
 		cosmosante.NewIncrementSequenceDecorator(options.AccountKeeper),
-		ibcante.NewAnteDecorator(options.IBCChannelKeeper),
+		ibcante.NewAnteDecorator(&options.IBCChannelKeeper),
 	), nil
 }
