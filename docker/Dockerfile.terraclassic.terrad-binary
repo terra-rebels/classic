@@ -1,6 +1,7 @@
 FROM ubuntu:22.04
 
 ARG version=a6f1a39f00c2723b62f42d40d024bd1181225a8d
+ENV VERSION ${version}
 
 RUN DEBIAN_FRONTEND=noninteractive ; \
     apt-get update ; \
@@ -18,8 +19,8 @@ ENV GOPATH=/usr/local/
 ENV PATH "$PATH:$GOPATH/bin"
 
 RUN git clone https://github.com/terra-rebels/classic.git ; \
-    git checkout ${version} ; \
     cd classic ; \
+    git checkout -q "$VERSION" ; \
     export PATH=$PATH:/usr/local/go/bin ; \
     export PATH=$PATH:$(go env GOPATH)/bin ; \
     make install
