@@ -149,7 +149,7 @@ replace (
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	// tendermint with terra oracle support
 	github.com/tendermint/tendermint => github.com/terra-money/tendermint v0.34.14-terra.2
-	// tm-db with pebbledb support so that things can go fast
+	// use notionals tm-db
 	github.com/tendermint/tm-db => github.com/baabeetaa/tm-db v0.6.7-0.20220827003937-31989c12be6f
 	// enforce the use of grpc v1.33.2, which is compatible with the cosmos flavored protocol buffers
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
